@@ -1,5 +1,12 @@
-tester = Tester.new(arr_len: 11, structs: [Heap, ImmutableHeap, AVLTree, ImmutableAVLTree, RubyRedBlack, NativeRedBlack])
-csv_exporter = CSVExporter.new
+require 'ruby2d'
 
-insertion, sizes = tester.execute_all
-csv_exporter.export_map("test.csv", sizes, insertion)
+set title: "Hello Triangle", width: 800, height: 600
+
+Triangle.new(
+        x1: 320, y1:  50,
+        x2: 540, y2: 430,
+        x3: 100, y3: 430,
+        color: ['red', 'green', 'blue']
+)
+
+show
