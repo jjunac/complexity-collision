@@ -20,10 +20,11 @@ CIRCLE_RADIUS = WINDOW_SIZE / 200
 entities = []
 field = Field.new(N)
 
+background = Rectangle.new(x: 0, y:0, width:80, height: 14, color:'silver', z: 10)
+text_collisions = Text.new("", x: 2, y:2, size:10, color:'black', z: 11)
 
 update do
-    entities.each {|e| e.remove}
-    entities.clear
+    clear
 
     lines = []
     # Movement and display
@@ -50,10 +51,9 @@ update do
                 color: 'white',
         )
         lines << line
-        entities << line
     end
     # Collision detection
-    n_collision = 0
+    n_collisions = 0
     (lines.length - 1).times do |i|
         abx = lines[i].x2 - lines[i].x1
         aby = lines[i].y2 - lines[i].y1
@@ -89,8 +89,10 @@ update do
             collisionx = (alpha * lines[i].x2 - beta * lines[i].x1) / denominator
             collisiony = (alpha * lines[i].y2 - beta * lines[i].y1) / denominator
 
-            entities << Circle.new(x: collisionx, y: collisiony, radius: CIRCLE_RADIUS, color: 'red')
+            Circle.new(x: collisionx, y: collisiony, radius: CIRCLE_RADIUS, color: 'red')
+            n_collisions += 1
         end
+        text_collisions.text = "Collisions: #{n_collisions}"
     end
 end
 
