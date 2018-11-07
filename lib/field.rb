@@ -1,0 +1,22 @@
+require 'forwardable'
+require_relative 'segment'
+
+class Field
+    extend Forwardable
+
+    def_delegators :@segments, :each
+
+    def initialize(nb_segments=1)
+        @segments = Array.new(nb_segments) do
+            Segment.new(
+                    rand,
+                    rand,
+                    rand * 2 - 1,
+                    rand * 2 - 1,
+                    rand * 2 - 1,
+                    rand * 2 - 1
+            )
+        end
+    end
+
+end
