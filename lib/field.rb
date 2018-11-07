@@ -13,8 +13,8 @@ class Field
                     rand,
                     rand * 2 - 1,
                     rand * 2 - 1,
-                    rand * 2 - 1,
-                    rand * 2 - 1
+                    rand * 2 * Math::PI,
+                    rand * 2 * Math::PI
             )
         end
     end

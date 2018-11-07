@@ -6,12 +6,16 @@ WINDOW_SIZE = 700
 
 set title: "Hello Triangle", width: WINDOW_SIZE, height: WINDOW_SIZE
 
-N = 300
-
-RADIUS = 800 / Math.sqrt(N)
-
+# Parameters
+N = 200
 SPEED_DIVIDER = 200
-RADIAL_SPEED_DIVIDER = 42
+RADIAL_SPEED_DIVIDER = 130
+
+# Constants for computation optimisation
+RADIUS = 800 / Math.sqrt(N)
+LINE_WIDTH = WINDOW_SIZE / 400
+CIRCLE_RADIUS = WINDOW_SIZE / 200
+
 
 entities = []
 field = Field.new(N)
@@ -35,12 +39,14 @@ update do
             segment.vy = -segment.vy
         end
         # Display
-        dx = RADIUS * Math.cos(segment.angle * Math::PI)
-        dy = RADIUS * Math.sin(segment.angle * Math::PI)
+        dx = RADIUS * Math.cos(segment.angle)
+        dy = RADIUS * Math.sin(segment.angle)
+        px = segment.x * WINDOW_SIZE
+        py = segment.y * WINDOW_SIZE
         line = Line.new(
-                x1: segment.x * WINDOW_SIZE - dx, y1: segment.y * WINDOW_SIZE - dy,
-                x2: segment.x * WINDOW_SIZE + dx, y2: segment.y * WINDOW_SIZE + dy,
-                width: WINDOW_SIZE / 400,
+                x1: px - dx, y1: py - dy,
+                x2: px + dx, y2: py + dy,
+                width: LINE_WIDTH,
                 color: 'white',
         )
         lines << line
@@ -60,7 +66,7 @@ update do
             alpha = abx * acy - aby * acx
             beta = abx * ady - aby * adx
 
-            if (alpha == 0 or beta == 0) or not ((alpha < 0 and beta > 0) or (alpha > 0 and beta < 0))
+            if alpha < 0 == beta < 0
                 next
             end
 
@@ -83,7 +89,7 @@ update do
             collisionx = (alpha * lines[i].x2 - beta * lines[i].x1) / denominator
             collisiony = (alpha * lines[i].y2 - beta * lines[i].y1) / denominator
 
-            entities << Circle.new(x: collisionx, y: collisiony, radius: WINDOW_SIZE / 200, color: 'red')
+            entities << Circle.new(x: collisionx, y: collisiony, radius: CIRCLE_RADIUS, color: 'red')
         end
     end
 end
