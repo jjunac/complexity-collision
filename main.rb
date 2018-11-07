@@ -20,7 +20,7 @@ CIRCLE_RADIUS = WINDOW_SIZE / 200
 entities = []
 field = Field.new(N)
 
-
+quad_tree = QuadTree.new(BoundingBox.new([WINDOW_SIZE / 2, WINDOW_SIZE / 2], WINDOW_SIZE))
 update do
     entities.each {|e| e.remove}
     entities.clear
@@ -49,9 +49,11 @@ update do
                 width: LINE_WIDTH,
                 color: 'white',
         )
+        quad_tree.insert([px,py])
         lines << line
         entities << line
     end
+
     # Collision detection
     n_collision = 0
     (lines.length - 1).times do |i|
