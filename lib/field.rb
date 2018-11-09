@@ -5,6 +5,9 @@ class Field
     extend Forwardable
 
     def_delegators :@segments, :each
+    def_delegators :@segments, :length
+    def_delegators :@segments, :[]
+
 
     def initialize(nb_segments=1)
         @segments = Array.new(nb_segments) do

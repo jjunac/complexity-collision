@@ -17,18 +17,17 @@ LINE_WIDTH = WINDOW_SIZE / 400
 CIRCLE_RADIUS = WINDOW_SIZE / 200
 
 
-entities = []
+collisions = Hash.new
 field = Field.new(N)
+lines = Array.new(N) { Line.new(width: LINE_WIDTH, color: 'white') }
 
 background = Rectangle.new(x: 0, y:0, width:80, height: 14, color:'silver', z: 10)
 text_collisions = Text.new("", x: 2, y:2, size:10, color:'black', z: 11)
 
 update do
-    clear
-
-    lines = []
     # Movement and display
-    field.each do |segment|
+    field.length.times do |k|
+        segment = field[k]
         # Update coordinates
         segment.angle += (segment.radial_speed / RADIAL_SPEED_DIVIDER) % 2
         segment.x += segment.vx / SPEED_DIVIDER
@@ -44,13 +43,10 @@ update do
         dy = RADIUS * Math.sin(segment.angle)
         px = segment.x * WINDOW_SIZE
         py = segment.y * WINDOW_SIZE
-        line = Line.new(
-                x1: px - dx, y1: py - dy,
-                x2: px + dx, y2: py + dy,
-                width: LINE_WIDTH,
-                color: 'white',
-        )
-        lines << line
+        lines[k].x1 = px - dx
+        lines[k].y1 = py - dy
+        lines[k].x2 = px + dx
+        lines[k].y2 = py + dy
     end
     # Collision detection
     n_collisions = 0
@@ -58,6 +54,8 @@ update do
         abx = lines[i].x2 - lines[i].x1
         aby = lines[i].y2 - lines[i].y1
         (i+1...lines.length).each do |j|
+            key = [i, j]
+
             acx = lines[j].x1 - lines[i].x1
             acy = lines[j].y1 - lines[i].y1
             adx = lines[j].x2 - lines[i].x1
@@ -67,7 +65,7 @@ update do
             beta = abx * ady - aby * adx
 
             if alpha < 0 == beta < 0
-                next
+                collisions.delete key
             end
 
             cdx = lines[j].x1 - lines[j].x2
@@ -81,7 +79,7 @@ update do
             beta = cdx * cby - cdy * cbx
 
             if alpha < 0 == beta < 0
-                next
+                collisions.delete key
             end
 
             denominator = alpha - beta
@@ -89,7 +87,13 @@ update do
             collisionx = (alpha * lines[i].x2 - beta * lines[i].x1) / denominator
             collisiony = (alpha * lines[i].y2 - beta * lines[i].y1) / denominator
 
-            Circle.new(x: collisionx, y: collisiony, radius: CIRCLE_RADIUS, color: 'red')
+            if collisions.has_key? key
+                collisions[key].x = collisionx
+                collisions[key].y = collisiony
+            else
+                collisions[key] = Circle.new(x: collisionx, y: collisiony, radius: CIRCLE_RADIUS, color: "red")
+            end
+
             n_collisions += 1
         end
         text_collisions.text = "Collisions: #{n_collisions}"
