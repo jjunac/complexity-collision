@@ -23,8 +23,18 @@ field = Field.new(N)
 background = Rectangle.new(x: 0, y:0, width:80, height: 14, color:'silver', z: 10)
 text_collisions = Text.new("", x: 2, y:2, size:10, color:'black', z: 11)
 
+last_fps = Time.now.to_f
+frames = 0
+
 update do
     clear
+
+    now = Time.now.to_f
+    if now > last_fps + 1
+        p "FPS: #{frames}"
+        frames = 0
+        last_fps = now
+    end
 
     lines = []
     # Movement and display
@@ -94,6 +104,7 @@ update do
         end
         text_collisions.text = "Collisions: #{n_collisions}"
     end
+    frames += 1
 end
 
 show
