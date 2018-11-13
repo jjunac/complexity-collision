@@ -4,7 +4,7 @@ require_relative 'board'
 
 class Tester
 
-    def initialize(collision_detectors, repeat = 1000, max_lines = 9)
+    def initialize(collision_detectors, repeat = 100, max_lines = 9)
         @repeat = repeat
         @max_lines = max_lines
         @collision_detectors = collision_detectors
@@ -20,9 +20,11 @@ class Tester
                 sizes << n
                 radius = 800 / Math.sqrt(n)
                 field = Field.new(radius, n)
-                lines = Array.new(n) {Line.new(width: LINE_WIDTH, color: 'white')}
-                board = Board.new(radius, 1080)
-                results[func.name] << without_display(field, lines, board, func)
+                lines = Array.new(n) {FakeLines.new}
+                board = Board.new(radius, false,800)
+                time = without_display(field, lines, board, func)
+                p "#{n} #{time}"
+                results[func.name] << time
             end
         end
         [results, sizes]
@@ -33,10 +35,19 @@ class Tester
         mean_time = 0
         @repeat.times do |x|
             board.update_positions(field, lines)
-            collisions.each(&:remove)
-            collisions = []
             mean_time += Benchmark.measure {func.call(board, collisions, lines)}.real
-            end
-        mean_time / (@repeat * lines.length)
+        end
+        mean_time / (@repeat)
+    end
+end
+class FakeLines
+
+    attr_accessor :y1, :x1, :y2, :x2
+
+    def initialize(x1 = 0, x2 = 0, y1 = 0, y2 = 0)
+        @x1 = x1
+        @x2 = x2
+        @y1 = y1
+        @y2 = y2
     end
 end

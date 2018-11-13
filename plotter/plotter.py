@@ -28,9 +28,9 @@ df = read_csv(args.csv)
 exponents = {}
 for k in df:
     if k != "array size":
-        xmap = list(map(int, df["array size"][8:]))
+        xmap = list(map(int, df["array size"][6:]))
         x = numpy.log(numpy.asarray(xmap))
-        ymap = list(map(float, df[k][8:]))
+        ymap = list(map(float, df[k][6:]))
         y = numpy.log(numpy.asarray(ymap))
         cov = numpy.cov(x, y)
         exponents[k] = cov[1][0] / cov[0][0]

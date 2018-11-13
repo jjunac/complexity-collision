@@ -1,10 +1,11 @@
 class Board
 
-    def initialize(segment_radius, window_size = 700, radial_speed_divider = 130, speed_divider = 200)
+    def initialize(segment_radius, display = true, window_size = 700, radial_speed_divider = 130, speed_divider = 200)
         @window_size = window_size
         @radial_speed_divider = radial_speed_divider
         @speed_divider = speed_divider
         @radius = segment_radius
+        @display = display
     end
 
     def update_physics(segment)
@@ -16,6 +17,14 @@ class Board
         segment.y += segment.vy / @speed_divider
         unless 0 <= segment.y and segment.y <= 1
             segment.vy = -segment.vy
+        end
+    end
+
+    def add_collision(collide, collisions)
+        if @display
+            collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+        else
+            collisions << collide
         end
     end
 

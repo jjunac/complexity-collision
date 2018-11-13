@@ -28,6 +28,8 @@ N.times do |i|
 end" ""
 
 
+
+
 def naive_collisions(board, collisions, lines)
     (lines.length - 1).times do |i|
         abx = lines[i].x2 - lines[i].x1
@@ -35,7 +37,7 @@ def naive_collisions(board, collisions, lines)
         (i + 1...lines.length).each do |j|
             collide = board.collide?(abx, aby, lines[i], lines[j])
             if collide
-                collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+                board.add_collision(collide, collisions)
             end
         end
     end
@@ -52,7 +54,7 @@ def scan_line(board, collisions, lines)
             if (lines[j].x1 < p && p < lines[j].x2) or (lines[j].x2 < p && p < lines[j].x1)
                 collide = board.collide?(abx, aby, lines[i], lines[j])
                 if collide
-                    collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+                    board.add_collision(collide, collisions)
                 end
             end
         end
@@ -61,6 +63,7 @@ end
 
 def scan_line_without_sort(board, collisions, lines)
     (lines.length - 1).times do |i|
+        p lines[i].x1
         abx = lines[i].x2 - lines[i].x1
         aby = lines[i].y2 - lines[i].y1
         p = [lines[i].x1, lines[i].x2].min
@@ -68,7 +71,7 @@ def scan_line_without_sort(board, collisions, lines)
             if (lines[j].x1 < p && p < lines[j].x2) or (lines[j].x2 < p && p < lines[j].x1)
                 collide = board.collide?(abx, aby, lines[i], lines[j])
                 if collide
-                    collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+                    board.add_collision(collide, collisions)
                 end
             end
         end
@@ -77,7 +80,7 @@ end
 
 def with_display(field, lines)
     collisions = []
-    Rectangle.new(x: 0, y:0, width:80, height: 26, color:'silver', z: 10)
+    Rectangle.new(x: 0, y: 0, width: 80, height: 26, color: 'silver', z: 10)
     text_collisions = Text.new("", x: 2, y: 2, size: 10, color: 'black', z: 11)
     text_fps = Text.new("FPS: ", x: 2, y: 14, size: 10, color: 'black', z: 11)
     board = Board.new(RADIUS, WINDOW_SIZE)
@@ -112,9 +115,14 @@ options = {}
 OptionParser.new do |opt|
     opt.on('--bench') {|| options[:bench] = true}
     opt.on('-b') {|| options[:bench] = true}
+    opt.on('--algo algorithm') {|o| options[:algo] = o.to_sym}
 end.parse!
 if options[:bench]
-    tester = Tester.new([method(:scan_line)])
+    if !options[:algo]
+        tester = Tester.new([method(:scan_line), method(:naive_collisions)], 100, 11)
+    else
+        tester = Tester.new([method(options[:algo])], 100, 11)
+    end
     csv_exporter = CSVExporter.new
     results, sizes = tester.execute_all
     csv_exporter.export_map("test.csv", sizes, results)
