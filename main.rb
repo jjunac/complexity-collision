@@ -6,7 +6,7 @@ require_relative 'lib/board'
 require_relative 'lib/csv_exporter'
 require_relative 'lib/tester'
 
-N = 200
+N = 400
 WINDOW_SIZE = 800
 # Constants for computation optimisation
 RADIUS = 800 / Math.sqrt(N)
@@ -28,11 +28,15 @@ N.times do |i|
 end" ""
 
 
-def naive_collisions(board, collisions, i, lines, abx, aby)
-    (i + 1...lines.length).each do |j|
-        collide = board.collide?(abx, aby, lines[i], lines[j])
-        if collide
-            collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+def naive_collisions(board, collisions, lines)
+    (lines.length - 1).times do |i|
+        abx = lines[i].x2 - lines[i].x1
+        aby = lines[i].y2 - lines[i].y1
+        (i + 1...lines.length).each do |j|
+            collide = board.collide?(abx, aby, lines[i], lines[j])
+            if collide
+                collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+            end
         end
     end
 end
@@ -55,6 +59,7 @@ end
 
 def with_display(field, lines)
     collisions = []
+    Rectangle.new(x: 0, y:0, width:80, height: 26, color:'silver', z: 10)
     text_collisions = Text.new("", x: 2, y: 2, size: 10, color: 'black', z: 11)
     text_fps = Text.new("FPS: ", x: 2, y: 14, size: 10, color: 'black', z: 11)
     board = Board.new(RADIUS, WINDOW_SIZE)
@@ -67,11 +72,8 @@ def with_display(field, lines)
 
         collisions.each(&:remove)
         collisions = []
-        (lines.length - 1).times do |i|
-            abx = lines[i].x2 - lines[i].x1
-            aby = lines[i].y2 - lines[i].y1
-            naive_collisions(board, collisions, i, lines, abx, aby)
-        end
+
+        naive_collisions(board, collisions, lines)
         now = Time.now.to_f
         if now > last_fps + 1
             text_fps.text = "FPS: #{frames}"
