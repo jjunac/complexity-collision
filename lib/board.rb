@@ -1,11 +1,30 @@
+require_relative 'segment'
 class Board
 
-    def initialize(segment_radius, display = true, window_size = 700, radial_speed_divider = 130, speed_divider = 200)
+    attr_reader :segments, :lines, :window_size, :radius
+
+    def initialize(segment_length, nb_segments, display = true, window_size = 700, radial_speed_divider = 130, speed_divider = 200)
         @window_size = window_size
         @radial_speed_divider = radial_speed_divider
         @speed_divider = speed_divider
-        @radius = segment_radius
+        @radius = segment_length
         @display = display
+        @segments = Array.new(nb_segments) do
+            Segment.new(
+                rand + 0.05,
+                rand + 0.05,
+                rand * 2 - 1,
+                rand * 2 - 1,
+                rand * 2 * Math::PI,
+                rand * 2 * Math::PI,
+                segment_length
+            )
+        end
+        if display
+            @lines = Array.new(nb_segments) {Line.new(width: window_size / 400, color: 'white', z: 8)}
+        else
+            @lines = Array.new(nb_segments) {FakeLines.new}
+        end
     end
 
     def update_physics(segment)
@@ -22,15 +41,15 @@ class Board
 
     def add_collision(collide, collisions)
         if @display
-            collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+            collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red", z: 9)
         else
             collisions << collide
         end
     end
 
-    def update_positions(field, lines)
-        field.length.times do |k|
-            segment = field[k]
+    def update_positions
+        @segments.length.times do |k|
+            segment = @segments[k]
             # Update coordinates
             update_physics(segment)
             # Display
@@ -38,10 +57,10 @@ class Board
             dy = @radius * Math.sin(segment.angle)
             px = segment.x * @window_size
             py = segment.y * @window_size
-            lines[k].x1 = px - dx
-            lines[k].y1 = py - dy
-            lines[k].x2 = px + dx
-            lines[k].y2 = py + dy
+            @lines[k].x1 = px - dx
+            @lines[k].y1 = py - dy
+            @lines[k].x2 = px + dx
+            @lines[k].y2 = py + dy
         end
     end
 
@@ -80,4 +99,16 @@ class Board
         [collision_x, collision_y]
     end
 
+end
+
+class FakeLines
+
+    attr_accessor :y1, :x1, :y2, :x2
+
+    def initialize(x1 = 0, x2 = 0, y1 = 0, y2 = 0)
+        @x1 = x1
+        @x2 = x2
+        @y1 = y1
+        @y2 = y2
+    end
 end

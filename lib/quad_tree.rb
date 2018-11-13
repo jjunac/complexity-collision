@@ -8,17 +8,10 @@ class BoundingBox
     end
 
     def contains_point(point)
-        if @center[0] - @half_range <= point[0] <= @center[0] + @half_range
-            if @center[1] - @half_range <= point[1] <= @center[1] + @half_range
+        if @center[0] - @half_range <= point[0] && point[0] <= @center[0] + @half_range
+            if @center[1] - @half_range <= point[1] && point[1] <= @center[1] + @half_range
                 return true
             end
-        end
-        false
-    end
-
-    def intersects_segment(segment)
-        if @center[0] - segment.x < @range + segment.radius or @center[1] - segment.y < @range + segment.radius
-            return true
         end
         false
     end
@@ -34,11 +27,14 @@ end
 
 
 class QuadTree
-    MAX_CAPACITY = 4
+    attr_reader :north_west, :north_east, :lines, :south_east, :boundary, :south_west
+
+    MAX_CAPACITY = 32
+    MIN_SIZE = 100
 
     def initialize(boundary)
         @boundary = boundary
-        @segments = []
+        @lines = []
         @north_west = nil
         @north_east = nil
         @south_west = nil
@@ -53,74 +49,66 @@ class QuadTree
         @south_east = QuadTree.new(BoundingBox.new([@boundary.center[0] + new_range, @boundary.center[1] + new_range], new_range))
     end
 
-    def insert(segment)
-        unless @boundary.intersects_segment(segment)
+    def insert_line(line)
+        points = [[line.x1, line.y1], [(line.x1 + line.x2) / 2.0, (line.y1 + line.y2) / 2.0], [line.x2, line.y2]]
+        points.each do |point|
+            insert(point, line)
+        end
+    end
+
+    def insert(point, line)
+        unless @boundary.contains_point(point)
             return false
         end
 
-        if @segments.length < MAX_CAPACITY
-            @segments << segment
+        if @boundary.half_range <= MIN_SIZE || @lines.length < MAX_CAPACITY
+            @lines << line
+            return true
         end
 
         if @north_west == nil
             subdivide
         end
 
-        if @north_west.insert(segment)
+        if @north_west.insert(point, line)
             return true
         end
-        if @north_east.insert(segment)
+        if @north_east.insert(point, line)
             return true
         end
-        if @south_west.insert(segment)
+        if @south_west.insert(point, line)
             return true
         end
-        if @south_east.insert(segment)
+        if @south_east.insert(point, line)
             return true
         end
     end
 
-    def query_range(range)
+    def query_range(line)
+        points = [[line.x1, line.y1], [line.x2, line.y2], [(line.x1 + line.x2) / 2.0, (line.y1 + line.y2) / 2.0]]
         res = []
-        unless @boundary.intersects_box(range)
-            return res
+        points.each do |point|
+            res += query_points(point)
         end
-
-        for segment in @segments
-            if range.intersects_segment(segment)
-                res << segment
-            end
-        end
-        if @north_west.nil?
-            return res
-        end
-        res += @north_west.query_range(range)
-        res += @north_east.query_range(range)
-        res += @south_east.query_range(range)
-        res += @south_east.query_range(range)
         res
     end
 
-    def delete(point)
-        unless @boundary.intersects_segment
-            return false
+    def query_points(point)
+        unless @boundary.contains_point(point)
+            return []
         end
 
+        res = [] + @lines.select do |l|
+            !((l.x1 == point[0] && l.y1 == point[1]) || (l.x2 == point[0] && l.y2 == point[1]) || ((l.x1 + l.x2) / 2 == point[0] && (l.y1 + l.y2) / 2 == point[1]))
+        end
         if @north_west.nil?
-            @segments.delete(point)
+            return res
         end
-
-        if @north_west.delete(point)
-            return true
-        end
-        if @north_east.delete(point)
-            return true
-        end
-        if @south_west.delete(point)
-            return true
-        end
-        if @south_east.delete(point)
-            return true
-        end
+        res += @north_west.query_points(point)
+        res += @north_east.query_points(point)
+        res += @south_east.query_points(point)
+        res += @south_east.query_points(point)
+        return res
     end
+
 end
