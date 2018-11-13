@@ -35,13 +35,8 @@ class Tester
             board.update_positions(field, lines)
             collisions.each(&:remove)
             collisions = []
-            (lines.length - 1).times do |i|
-                abx = lines[i].x2 - lines[i].x1
-                aby = lines[i].y2 - lines[i].y1
-                mean_time += Benchmark.measure {func.call(board, collisions, i, lines, abx, aby)}.real
+            mean_time += Benchmark.measure {func.call(board, collisions, lines)}.real
             end
-        end
-        p mean_time
         mean_time / (@repeat * lines.length)
     end
 end
