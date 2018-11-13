@@ -43,10 +43,13 @@ end
 
 
 def scan_line(board, collisions, lines)
-    entries = lines.sort {|a, b| [a.x1, a.x1].min <=> [b.x1, b.x2].min}
-    entries.times do |i|
-        (i + 1...lines.length).each do |j|
-            if (lines[j].x1 < lines[i].x1 && lines[i].x1 < lines[j].x2) or (lines[j].x2 < lines[i].x1 && lines[i].x1 < lines[j].x1)
+    entries = lines.sort {|a, b| [a.x1, a.x2].min <=> [b.x1, b.x2].min}
+    (entries.length - 1).times do |i|
+        abx = lines[i].x2 - lines[i].x1
+        aby = lines[i].y2 - lines[i].y1
+        p = [lines[i].x1, lines[i].x2].min
+        (lines.length - 1).times do |j|
+            if (lines[j].x1 < p && p < lines[j].x2) or (lines[j].x2 < p && p < lines[j].x1)
                 collide = board.collide?(abx, aby, lines[i], lines[j])
                 if collide
                     collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
@@ -56,6 +59,21 @@ def scan_line(board, collisions, lines)
     end
 end
 
+def scan_line_without_sort(board, collisions, lines)
+    (lines.length - 1).times do |i|
+        abx = lines[i].x2 - lines[i].x1
+        aby = lines[i].y2 - lines[i].y1
+        p = [lines[i].x1, lines[i].x2].min
+        (lines.length - 1).times do |j|
+            if (lines[j].x1 < p && p < lines[j].x2) or (lines[j].x2 < p && p < lines[j].x1)
+                collide = board.collide?(abx, aby, lines[i], lines[j])
+                if collide
+                    collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+                end
+            end
+        end
+    end
+end
 
 def with_display(field, lines)
     collisions = []
@@ -73,7 +91,7 @@ def with_display(field, lines)
         collisions.each(&:remove)
         collisions = []
 
-        naive_collisions(board, collisions, lines)
+        scan_line(board, collisions, lines)
         now = Time.now.to_f
         if now > last_fps + 1
             text_fps.text = "FPS: #{frames}"
@@ -96,7 +114,7 @@ OptionParser.new do |opt|
     opt.on('-b') {|| options[:bench] = true}
 end.parse!
 if options[:bench]
-    tester = Tester.new([method(:naive_collisions)])
+    tester = Tester.new([method(:scan_line)])
     csv_exporter = CSVExporter.new
     results, sizes = tester.execute_all
     csv_exporter.export_map("test.csv", sizes, results)
