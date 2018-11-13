@@ -29,11 +29,25 @@ end" ""
 
 
 def naive_collisions(board, collisions, i, lines, abx, aby)
-
     (i + 1...lines.length).each do |j|
         collide = board.collide?(abx, aby, lines[i], lines[j])
         if collide
             collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+        end
+    end
+end
+
+
+def scan_line(board, collisions, lines)
+    entries = lines.sort {|a, b| [a.x1, a.x1].min <=> [b.x1, b.x2].min}
+    entries.times do |i|
+        (i + 1...lines.length).each do |j|
+            if (lines[j].x1 < lines[i].x1 && lines[i].x1 < lines[j].x2) or (lines[j].x2 < lines[i].x1 && lines[i].x1 < lines[j].x1)
+                collide = board.collide?(abx, aby, lines[i], lines[j])
+                if collide
+                    collisions << Circle.new(x: collide[0], y: collide[1], radius: CIRCLE_RADIUS, color: "red")
+                end
+            end
         end
     end
 end
