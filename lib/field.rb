@@ -9,15 +9,16 @@ class Field
     def_delegators :@segments, :[]
 
 
-    def initialize(nb_segments=1)
+    def initialize(segment_length, nb_segments = 1)
         @segments = Array.new(nb_segments) do
             Segment.new(
-                    rand,
-                    rand,
-                    rand * 2 - 1,
-                    rand * 2 - 1,
-                    rand * 2 * Math::PI,
-                    rand * 2 * Math::PI
+                rand,
+                rand,
+                rand * 2 - 1,
+                rand * 2 - 1,
+                rand * 2 * Math::PI,
+                rand * 2 * Math::PI,
+                segment_length
             )
         end
     end
