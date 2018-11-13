@@ -1,5 +1,7 @@
 require 'ruby2d'
 require 'optparse'
+require 'algorithms'
+require 'forwardable'
 
 require_relative 'lib/field'
 require_relative 'lib/board'
@@ -17,15 +19,54 @@ set title: "Collision benchmark", width: WINDOW_SIZE, height: WINDOW_SIZE
 
 # Parameters
 
+class GneeeLine
+    extend Forwardable
 
-"" "collisions = Array.new(N) { Array.new(N) { nil } }
-is_displayed = Array.new(N) { Array.new(N) { false } }
-N.times do |i|
-    (i+1...N).each do |j|
-        collisions[i][j] = Circle.new(x: 0, y: 0, radius: CIRCLE_RADIUS, color: 'red')
-        collisions[i][j].remove
+    attr_accessor :line, :leftmost, :rightmost
+    def_delegators :@line, :x1
+    def_delegators :@line, :x2
+    def_delegators :@line, :y1
+    def_delegators :@line, :y2
+
+    def initialize(line)
+        @line = line
+        if @line.x1 < @line.x2
+            @leftmost, @rightmost = @line.x1, @line.x2
+        else
+            @leftmost, @rightmost = @line.x2, @line.x1
+        end
     end
-end" ""
+    def <=>(another)
+        @rightmost <=> another.rightmost
+    end
+end
+
+def true_scan_line(board, collisions, lines)
+    tree = Containers::CRBTreeMap.new
+    entries = lines.map{ |l|  GneeeLine.new l}
+    entries.sort! {|a, b| a.leftmost <=> b.leftmost}
+    until entries.empty? do
+        l1 = entries.shift
+
+        abx = l1.x2 - l1.x1
+        aby = l1.y2 - l1.y1
+        tree.each do |_, l2|
+            collide = board.collide?(abx, aby, l1, l2)
+            if collide
+                board.add_collision(collide, collisions)
+            end
+        end
+
+        if entries.empty?
+            break
+        end
+        tree[l1.rightmost] = l1
+        while tree.min_key < entries.first.leftmost
+            tree.delete_min
+        end
+    end
+
+end
 
 
 
@@ -94,7 +135,7 @@ def with_display(field, lines)
         collisions.each(&:remove)
         collisions = []
 
-        scan_line(board, collisions, lines)
+        true_scan_line(board, collisions, lines)
         now = Time.now.to_f
         if now > last_fps + 1
             text_fps.text = "FPS: #{frames}"
