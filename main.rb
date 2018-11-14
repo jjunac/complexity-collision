@@ -7,8 +7,8 @@ require_relative 'lib/csv_exporter'
 require_relative 'lib/tester'
 require_relative 'lib/quad_tree'
 
-N = 100
-WINDOW_SIZE = 800
+N = 99
+WINDOW_SIZE = 700
 # Constants for computation optimisation
 RADIUS = 800 / Math.sqrt(N)
 LINE_WIDTH = WINDOW_SIZE / 400
@@ -93,9 +93,11 @@ def quadtree(board, collisions)
         aby = first_line.y2 - first_line.y1
         other_lines = quad_tree.query_range(first_line)
         other_lines.each do |line|
-            collide = board.collide?(abx, aby, first_line, line)
-            if collide
-                board.add_collision(collide, collisions)
+            if line!=first_line
+                collide = board.collide?(abx, aby, first_line, line)
+                if collide
+                    board.add_collision(collide, collisions)
+                end
             end
         end
     end
@@ -103,39 +105,43 @@ end
 
 
 def hash_table(board, collisions)
-    cell_size = [board.radius * 2, board.window_size / 2].min
-    size = (board.window_size / cell_size).ceil
-    grid = Array.new(size, Array.new(size))
-    grid.each {|col| col.length.times.each {|i| col[i] = []}}
-    board.lines.each do |line|
-        points = [[(line.x1 / cell_size).round, (line.y1 / cell_size).round], [(((line.x1 + line.x2) / 2) / cell_size).round, (((line.y1 + line.y2) / 2) / cell_size).round],
-                  [(line.x2 / cell_size).round, (line.y2 / cell_size).round]]
-        cells = []
-        points.each do |point|
-            x = [point[0], size - 1].min
-            column = grid[x]
-            y = [point[1], size - 1].min
-            if !cells.include?(column[y])
-                column[y].push(line)
-                cells.push(column[y])
-            end
-        end
+  grid = board.grid
+  cell_size = board.cell_size
+  size = board.size
+  grid.each {|col| col.length.times.each {|i| col[i] = []}}
+  board.lines.each do |line|
+    points = [[(line.x1 / cell_size).round, (line.y1 / cell_size).round], [(((line.x1 + line.x2) / 2) / cell_size).round, (((line.y1 + line.y2) / 2) / cell_size).round],
+              [(line.x2 / cell_size).round, (line.y2 / cell_size).round]]
+    cells = []
+    points.each do |point|
+      x = [point[0], size - 1].min
+      column = grid[x]
+      y = [point[1], size - 1].min
+      if !cells.include?(column[y])
+        column[y].push(line)
+        cells.push(column[y])
+      end
     end
-    grid.each do |col|
-        col.each do |cell|
-            (cell.length - 1).times do |i|
-                first_line = cell[i]
-                ((i + 1)...cell.length).each do |j|
-                    abx = first_line.x2 - first_line.x1
-                    aby = first_line.y2 - first_line.y1
-                    collide = board.collide?(abx, aby, first_line, cell[j])
-                    if collide
-                        board.add_collision(collide, collisions)
-                    end
-                end
+  end
+  cells = []
+  grid.each do |col|
+    col.each do |cell|
+      (cell.length - 1).times do |i|
+        first_line = cell[i]
+        if !cells.include?(first_line)
+          ((i + 1)...cell.length).each do |j|
+            abx = first_line.x2 - first_line.x1
+            aby = first_line.y2 - first_line.y1
+            collide = board.collide?(abx, aby, first_line, cell[j])
+            if collide
+              board.add_collision(collide, collisions)
             end
+          end
         end
+        first_line << cells
+      end
     end
+  end
 
 end
 
@@ -229,5 +235,3 @@ else
     set title: "Collision benchmark", width: WINDOW_SIZE, height: WINDOW_SIZE
     with_display(method(:true_scan_line))
 end
-
-
