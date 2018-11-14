@@ -7,7 +7,7 @@ require_relative 'lib/csv_exporter'
 require_relative 'lib/tester'
 require_relative 'lib/quad_tree'
 
-N = 400
+N = 512
 WINDOW_SIZE = 800
 # Constants for computation optimisation
 RADIUS = 800 / Math.sqrt(N)
@@ -125,7 +125,7 @@ def hash_table(board, collisions)
         col.each do |cell|
             (cell.length - 1).times do |i|
                 first_line = cell[i]
-                (i + 1...cell.length).each do |j|
+                ((i + 1)...cell.length).each do |j|
                     abx = first_line.x2 - first_line.x1
                     aby = first_line.y2 - first_line.y1
                     collide = board.collide?(abx, aby, first_line, cell[j])
@@ -181,7 +181,7 @@ def with_display(method)
     Rectangle.new(x: 0, y: 0, width: 80, height: 26, color: 'silver', z: 10)
     text_collisions = Text.new("", x: 2, y: 2, size: 10, color: 'black', z: 11)
     text_fps = Text.new("FPS: ", x: 2, y: 14, size: 10, color: 'black', z: 11)
-    board = Board.new(RADIUS, WINDOW_SIZE)
+    board = Board.new(RADIUS, N, true, WINDOW_SIZE)
     last_fps = Time.now.to_f
     frames = 0
     update do
@@ -213,11 +213,12 @@ options = {}
 OptionParser.new do |opt|
     opt.on('--bench') {|| options[:bench] = true}
     opt.on('-b') {|| options[:bench] = true}
+    opt.on('--max') {|| options[:max] = true}
     opt.on('--algo algorithm') {|o| options[:algo] = o.to_sym}
 end.parse!
 if options[:bench]
     if !options[:algo]
-        tester = Tester.new([method(:true_scan_line), method(:scan_line), method(:naive_collisions)], 100, 13)
+        tester = Tester.new([method(:scan_line), method(:naive_collisions)], 100, 12)
     else
         tester = Tester.new([method(options[:algo])], 100, 14)
     end
@@ -227,8 +228,7 @@ if options[:bench]
 else
     require 'ruby2d'
     set title: "Collision benchmark", width: WINDOW_SIZE, height: WINDOW_SIZE
-
-    with_display(method(:hash_table))
+    with_display(method(:scan_line))
 end
 
 
