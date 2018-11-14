@@ -7,7 +7,7 @@ require_relative 'lib/csv_exporter'
 require_relative 'lib/tester'
 require_relative 'lib/quad_tree'
 
-N = 512
+N = 100
 WINDOW_SIZE = 800
 # Constants for computation optimisation
 RADIUS = 800 / Math.sqrt(N)
@@ -115,9 +115,9 @@ def hash_table(board, collisions)
             x = [point[0], size - 1].min
             column = grid[x]
             y = [point[1], size - 1].min
-            if !cells.include?(line)
+            if !cells.include?(column[y])
                 column[y].push(line)
-                cells.push(line)
+                cells.push(column[y])
             end
         end
     end
@@ -218,7 +218,7 @@ OptionParser.new do |opt|
 end.parse!
 if options[:bench]
     if !options[:algo]
-        tester = Tester.new([method(:scan_line), method(:naive_collisions)], 100, 12)
+        tester = Tester.new([method(:hash_table),method(:scan_line) , method(:naive_collisions)], 100, 11)
     else
         tester = Tester.new([method(options[:algo])], 100, 14)
     end
@@ -228,7 +228,7 @@ if options[:bench]
 else
     require 'ruby2d'
     set title: "Collision benchmark", width: WINDOW_SIZE, height: WINDOW_SIZE
-    with_display(method(:scan_line))
+    with_display(method(:hash_table))
 end
 
 
