@@ -61,7 +61,7 @@ def true_scan_line(board, collisions)
             break
         end
         tree[l1.rightmost] = l1
-        while tree.min_key < entries.first.leftmost
+        while tree.size != 0 and tree.min_key < entries.first.leftmost
             tree.delete_min
         end
     end
@@ -161,7 +161,6 @@ end
 def scan_line_without_sort(board, collisions)
     lines = board.lines
     (lines.length - 1).times do |i|
-        p lines[i].x1
         abx = lines[i].x2 - lines[i].x1
         aby = lines[i].y2 - lines[i].y1
         p = [lines[i].x1, lines[i].x2].min
@@ -218,7 +217,7 @@ OptionParser.new do |opt|
 end.parse!
 if options[:bench]
     if !options[:algo]
-        tester = Tester.new([method(:hash_table),method(:scan_line) , method(:naive_collisions)], 100, 11)
+        tester = Tester.new([method(:hash_table), method(:scan_line), method(:true_scan_line), method(:scan_line_without_sort), method(:naive_collisions)], 100, 10)
     else
         tester = Tester.new([method(options[:algo])], 100, 14)
     end
@@ -228,7 +227,7 @@ if options[:bench]
 else
     require 'ruby2d'
     set title: "Collision benchmark", width: WINDOW_SIZE, height: WINDOW_SIZE
-    with_display(method(:hash_table))
+    with_display(method(:true_scan_line))
 end
 
 
